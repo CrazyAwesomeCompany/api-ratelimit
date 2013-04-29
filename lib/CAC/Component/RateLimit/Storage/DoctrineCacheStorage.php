@@ -3,11 +3,8 @@
 namespace CAC\Component\RateLimit\Storage;
 use Doctrine\Common\Cache\Cache;
 
-use CAC\Component\RateLimit\RateLimitStorageInterface;
-
-class DoctrineCacheStorage implements RateLimitStorageInterface
+class DoctrineCacheStorage implements StorageInterface
 {
-
     /**
      * @var \Doctrine\Common\Cache\Cache
      */
@@ -18,10 +15,18 @@ class DoctrineCacheStorage implements RateLimitStorageInterface
         $this->cache = $cache;
     }
 
+    /**
+     * (non-PHPdoc)
+     * @see \CAC\Component\RateLimit\Storage\StorageInterface::fetch()
+     */
     public function fetch($id) {
         return $this->cache->fetch($id);
     }
 
+    /**
+     * (non-PHPdoc)
+     * @see \CAC\Component\RateLimit\Storage\StorageInterface::set()
+     */
     public function set($id, $amount) {
         return $this->cache->save($id, $amount);
     }

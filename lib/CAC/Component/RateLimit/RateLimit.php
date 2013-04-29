@@ -2,29 +2,48 @@
 
 namespace CAC\Component\RateLimit;
 
+use CAC\Component\RateLimit\Storage\StorageInterface;
 
 class RateLimit
 {
-
-    private $maxLimit;
-
-
-    private $limitRegenerateTime = 60;
-    private $limitRegenerateAmount = 10;
-
+    /**
+     * Configuration
+     *
+     * @var array
+     */
+    private $config;
 
     /**
-     * @var RateLimitStorageInterface
+     * @var StorageInterface
      */
     private $storage;
 
-
-    public function __construct(RateLimitStorageInterface $storage, $config = array())
+    /**
+     * Create a new RateLimiter
+     *
+     * @param StorageInterface $storage
+     * @param array $config
+     */
+    public function __construct(StorageInterface $storage, $config = array())
     {
+        $this->config = array_replace_recursive(
+            array(
+                'maxLimit' => 100,
+                'regenerateTime' => 60,
+                'regenerateAmount' => 10
+            ),
+            $config
+        );
+
         $this->setStorage($storage);
-        $this->maxLimit = 100;
     }
 
+    /**
+     * Substract an amount from the rate limit
+     *
+     * @param string  $id
+     * @param integer $amount
+     */
     public function substract($id, $amount)
     {
         $limit = $this->getCurrentLimit($id);
@@ -33,6 +52,12 @@ class RateLimit
         return $this->set($id, $limit);
     }
 
+    /**
+     * Set the new rate limit
+     *
+     * @param string  $id
+     * @param integer $amount
+     */
     public function set($id, $amount)
     {
         $amount = implode("|", array(time(), $amount));
@@ -71,7 +96,7 @@ class RateLimit
 
         // Check if the given ID already has a limit set. If not return the max limit
         if (false === $currentLimit) {
-            return $this->maxLimit;
+            return $this->config["maxLimit"];
         }
 
         // add some magic to determine amount of time passed since last add
@@ -80,7 +105,7 @@ class RateLimit
 
         $credits += $additionalCredits;
 
-        return min(intval($credits), $this->maxLimit);
+        return min(intval($credits), $this->config["maxLimit"]);
     }
 
     /**
@@ -88,11 +113,11 @@ class RateLimit
      *
      * @param integer $lastAdd timestamp
      *
-     * @return array
+     * @return integer
      */
     private function calcCreditRegeneration($lastAdd)
     {
-        $credits = ((time() - $lastAdd) / $this->limitRegenerateTime) * $this->limitRegenerateAmount;
+        $credits = ((time() - $lastAdd) / $this->config["regenerateTime"]) * $this->config["regenerateAmount"];
 
         return round($credits);
     }
@@ -100,9 +125,9 @@ class RateLimit
     /**
      * Set the RateLimit Storage Adapter
      *
-     * @param RateLimitStorageInterface $storage
+     * @param StorageInterface $storage
      */
-    public function setStorage(RateLimitStorageInterface $storage)
+    public function setStorage(StorageInterface $storage)
     {
         $this->storage = $storage;
     }

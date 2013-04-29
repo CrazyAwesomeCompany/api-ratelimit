@@ -1,9 +1,8 @@
 <?php
 
-namespace CAC\Component\RateLimit;
+namespace CAC\Component\RateLimit\Storage;
 
-
-interface RateLimitStorageInterface
+interface StorageInterface
 {
     /**
      * Fetch rate limit
@@ -19,5 +18,4 @@ interface RateLimitStorageInterface
      * @param string $amount
      */
     public function set($id, $amount);
-
 }
